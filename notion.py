@@ -57,6 +57,10 @@ def make_pages(breadcrumbs:list, request:dict)->dict:
                 INSERT INTO page_info(page_id, parent_page)
                 VALUES (:page_id, :parent_page)"""),
                 {'page_id':new_page_id, 'parent_page':parent_page})
+            db.execute(text("""
+                INSERT INTO page_info(page_id, sub_page)
+                VALUES (:page_id, :sub_page)"""),
+                {'page_id':parent_page, 'sub_page':new_page_id})      
     db.commit()
     return {"status":200, "msg":"ok"}
 
