@@ -40,6 +40,26 @@ def get_page_info(what: str, page_id:int)->list:
     result = list(x[0] for x in page_info  if x[0] is not None)
     return result
 
+def make_pages(breadcrumbs:list, request:dict)->dict:
+    '''
+    페이지 생성 api
+    현재 페이지의 breadcrumbs를 받는 다는 전제하에, 다음과 같이 부모, 서브 페이지 정보 저장
+    '''
+    db = database.connect()    
+    new_page_id = db.execute(text("""
+                INSERT INTO page(title, content)
+                VALUES (:title, :content)"""), request).lastrowid
+    
+    if len(breadcrumbs) >=1:
+        for i in range(len(breadcrumbs)):
+            parent_page = breadcrumbs[i].split('_')[1]
+            db.execute(text("""
+                INSERT INTO page_info(page_id, parent_page)
+                VALUES (:page_id, :parent_page)"""),
+                {'page_id':new_page_id, 'parent_page':parent_page})
+    db.commit()
+    return {"status":200, "msg":"ok"}
+
 def get_page(page_id:int)->dict:
     '''
     페이지 조회 api
