@@ -44,8 +44,6 @@ def DataBase():
 
 def get_PageInfo_Api(pageID):
     cursor = DataBase()[0]
-    cursor.execute("SELECT * FROM Pages")
-    print(cursor.fetchall())
     cursor.execute("SELECT * FROM Pages WHERE id=?", (pageID,))
 
     page_info = cursor.fetchone()
@@ -89,6 +87,13 @@ def get_PageInfo_Api(pageID):
             if breadcrumbs[0] == page_id:
                 breadcrumbs.clear()
             break
+    
+    return {
+        "pageId": page_id,
+	    "title": title,
+	    "subPages": sub_page if sub_page else [],
+	    "breadcrumbs": breadcrumbs if breadcrumbs else []
+    }
 
     
 # PagesTable, PageHiierarchyTable 생성
