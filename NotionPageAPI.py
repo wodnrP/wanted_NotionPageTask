@@ -41,6 +41,13 @@ def DataBase():
     cursor = conect_db.cursor()
     return cursor, conect_db
 
+def get_subPage(cursor, page_id):
+    try:
+        cursor.execute("SELECT child_id FROM PageHierarchy WHERE parent_id=? LIMIT 4", (page_id,))
+        return [row[0] for row in cursor.fetchall()]
+    except sqlite3.Error:
+        print("SQL Query Error")
+    return []
 
 def get_PageInfo_Api(pageID):
     cursor = DataBase()[0]
@@ -54,18 +61,7 @@ def get_PageInfo_Api(pageID):
     page_id, title, content = page_info
 
     # 최대 4개 조회
-    cursor.execute("SELECT child_id FROM PageHierarchy WHERE parent_id=? LIMIT 4", (page_id,))
-
-    sub_page = []
-
-    while True:
-        row = cursor.fetchone()
-        
-        if row == None:
-            break
-    
-        sub_page.append(row[0])
-    
+    sub_page = get_subPage(cursor, page_id)
 
     # 자식 id 기준 부모 아이디 조회로 breadcrumbs 추출
     # 만약 부모 아이디가 없으면 breadcumbs None으로 초기화
