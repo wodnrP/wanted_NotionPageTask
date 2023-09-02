@@ -44,7 +44,10 @@ def DataBase():
 
 def get_PageInfo_Api(pageID):
     cursor = DataBase()[0]
+    cursor.execute("SELECT * FROM Pages")
+    print(cursor.fetchall())
     cursor.execute("SELECT * FROM Pages WHERE id=?", (pageID,))
+
     page_info = cursor.fetchone()
     
     if page_info == None:
@@ -56,7 +59,6 @@ def get_PageInfo_Api(pageID):
     cursor.execute("SELECT child_id FROM PageHierarchy WHERE parent_id=? LIMIT 4", (page_id,))
 
     sub_page = []
-    print('pre:',sub_page)
 
     while True:
         row = cursor.fetchone()
@@ -66,7 +68,27 @@ def get_PageInfo_Api(pageID):
     
         sub_page.append(row[0])
     
-    print('aft:',sub_page)
+
+    # 자식 id 기준 부모 아이디 조회로 breadcrumbs 추출
+    # 만약 부모 아이디가 없으면 breadcumbs None으로 초기화
+    breadcrumbs = []
+    cur_page = page_id
+
+    while cur_page != None:
+        cursor.execute("SELECT parent_id FROM PageHierarchy WHERE child_id=?", (cur_page,))
+        parent_info = cursor.fetchone()
+        cursor.execute("SELECT title FROM Pages WHERE id=?", (cur_page,))
+        breadcrumbs_title = cursor.fetchone()
+
+        if parent_info != None:
+            breadcrumbs.insert(0, breadcrumbs_title[0])
+            cur_page = parent_info[0]
+
+        else:
+            breadcrumbs.insert(0, breadcrumbs_title[0])
+            if breadcrumbs[0] == page_id:
+                breadcrumbs.clear()
+            break
 
     
 # PagesTable, PageHiierarchyTable 생성
@@ -86,21 +108,46 @@ create_hierarchy = """
     FOREIGN KEY(child_id) REFERENCES Pages(id));
     """
 
-update_pages = """
-    INSERT INTO Pages(title, content) 
-    VALUES ('첫번째 부모 페이지', '첫번째 페이지 내용입니다');
+update_pages1 = """
+    INSERT INTO Pages(id, title, content) VALUES(1, 'A', '첫번째 페이지 내용');
+"""
+update_pages2 = """
+    INSERT INTO Pages(id, title, content) VALUES(2, 'B', '두번째 페이지 내용');
+"""
+update_pages3 = """
+    INSERT INTO Pages(id, title, content) VALUES(3, 'C', '세번째 페이지 내용');
+"""
+update_pages4 = """
+    INSERT INTO Pages(id, title, content) VALUES(4, 'D', '네번째 페이지 내용');
+"""
+update_pages5 = """
+    INSERT INTO Pages(id, title, content) VALUES(5, 'F', '다섯번째 페이지 내용');
+"""
+update_pages6 = """
+    INSERT INTO Pages(id, title, content) VALUES(6, 'G', '여섯번째 페이지 내용');
+"""
+update_pages7 = """
+    INSERT INTO Pages(id, title, content) VALUES(7, 'H', '일곱번째 페이지 내용');
 """
 
 update_hierarchy = """
     INSERT INTO PageHierarchy(parent_id, child_id) 
-    VALUES (1, 2), (1, 3), (1, 4);
+    VALUES (1, 2), (1, 3), (1, 4), (5, 1), (6, 5), (7, 6);
 """
 
-test_db = DataBase()
-test_db[0].execute(create_pages)
-test_db[0].execute(create_hierarchy)
-test_db[0].execute(update_pages)
-test_db[0].execute(update_hierarchy)
-test_db[1].commit()
-# 확인
+# 테스트 DB 생성 및 dummy data 추가 후 저장
+# test_db = DataBase()
+# test_db[0].execute(create_pages)
+# test_db[0].execute(create_hierarchy)
+# test_db[0].execute(update_pages1)
+# test_db[0].execute(update_pages2)
+# test_db[0].execute(update_pages3)
+# test_db[0].execute(update_pages4)
+# test_db[0].execute(update_pages5)
+# test_db[0].execute(update_pages6)
+# test_db[0].execute(update_pages7)
+# test_db[0].execute(update_hierarchy)
+# test_db[1].commit()
+
+#확인
 print(get_PageInfo_Api(1))
