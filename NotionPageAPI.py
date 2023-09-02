@@ -39,16 +39,35 @@ import sqlite3
 def DataBase():
     conect_db = sqlite3.connect("test_db")
     cursor = conect_db.cursor()
-    return cursor
+    return cursor, conect_db
 
 
 def get_PageInfo_Api(pageID):
-    print(DataBase())
-    DataBase().execute("SELECT * FROM Pages WHERE id=?", (pageID,))
-    page_info = DataBase().fetchone()
+    cursor = DataBase()[0]
+    cursor.execute("SELECT * FROM Pages WHERE id=?", (pageID,))
+    page_info = cursor.fetchone()
     
     if page_info == None:
         return None 
+    
+    page_id, title, content = page_info
+
+    # 최대 4개 조회
+    cursor.execute("SELECT child_id FROM PageHierarchy WHERE parent_id=? LIMIT 4", (page_id,))
+
+    sub_page = []
+    print('pre:',sub_page)
+
+    while True:
+        row = cursor.fetchone()
+        
+        if row == None:
+            break
+    
+        sub_page.append(row[0])
+    
+    print('aft:',sub_page)
+
     
 # PagesTable, PageHiierarchyTable 생성
 create_pages = """
@@ -67,8 +86,21 @@ create_hierarchy = """
     FOREIGN KEY(child_id) REFERENCES Pages(id));
     """
 
-DataBase().execute(create_pages)
-DataBase().execute(create_hierarchy)
+update_pages = """
+    INSERT INTO Pages(title, content) 
+    VALUES ('첫번째 부모 페이지', '첫번째 페이지 내용입니다');
+"""
 
+update_hierarchy = """
+    INSERT INTO PageHierarchy(parent_id, child_id) 
+    VALUES (1, 2), (1, 3), (1, 4);
+"""
+
+test_db = DataBase()
+test_db[0].execute(create_pages)
+test_db[0].execute(create_hierarchy)
+test_db[0].execute(update_pages)
+test_db[0].execute(update_hierarchy)
+test_db[1].commit()
 # 확인
 print(get_PageInfo_Api(1))
