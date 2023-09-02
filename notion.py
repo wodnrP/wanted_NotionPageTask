@@ -37,7 +37,7 @@ def get_page_info(what: str, page_id:int)->list:
     db = database.connect()
     page_info = db.execute(text(f"""
                 SELECT {what} FROM page_info WHERE page_id=:page_id"""),{'page_id': int(page_id)}).fetchall()
-    result = list(x[0] for x in page_info)
+    result = list(x[0] for x in page_info  if x[0] is not None)
     return result
 
 def get_page(page_id:int)->dict:
