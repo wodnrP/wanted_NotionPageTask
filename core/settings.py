@@ -42,6 +42,9 @@ INSTALLED_APPS = [
     "rest_framework",
     "drf_spectacular",
 
+    # Internal
+    "pages",
+
 ]
 
 MIDDLEWARE = [
