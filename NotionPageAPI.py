@@ -98,6 +98,7 @@ def get_PageInfo_Api(pageID):
     return {
         "pageId": page_id,
 	    "title": title,
+        "content": content,
 	    "subPages": sub_page if sub_page else [],
 	    "breadcrumbs": breadcrumbs if breadcrumbs else []
     }
