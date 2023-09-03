@@ -49,6 +49,34 @@ def get_subPage(cursor, page_id):
         print("SQL Query Error")
     return []
 
+# insert(0,) -> deque() O(n) -> O(1) 개선
+def get_breadcrumbs(cursor, page_id):
+    from collections import deque
+    breadcrumbs = deque()
+    cur_page = page_id
+
+    try:
+        while cur_page != None:
+            cursor.execute("SELECT parent_id FROM PageHierarchy WHERE child_id=?", (cur_page,))
+            parent_info = cursor.fetchone()
+            cursor.execute("SELECT title FROM Pages WHERE id=?", (cur_page,))
+            breadcrumbs_title = cursor.fetchone()
+
+            if parent_info != None:
+                breadcrumbs.appendleft(breadcrumbs_title[0])
+                cur_page = parent_info[0]
+
+            else:
+                breadcrumbs.appendleft(breadcrumbs_title[0])
+                if breadcrumbs[0] == page_id:
+                    breadcrumbs.clear()
+                break
+        return list(breadcrumbs)
+    
+    except sqlite3.Error:
+        print("SQL Query Error")
+    return []
+
 def get_PageInfo_Api(pageID):
     cursor = DataBase()[0]
     cursor.execute("SELECT * FROM Pages WHERE id=?", (pageID,))
@@ -65,24 +93,7 @@ def get_PageInfo_Api(pageID):
 
     # 자식 id 기준 부모 아이디 조회로 breadcrumbs 추출
     # 만약 부모 아이디가 없으면 breadcumbs None으로 초기화
-    breadcrumbs = []
-    cur_page = page_id
-
-    while cur_page != None:
-        cursor.execute("SELECT parent_id FROM PageHierarchy WHERE child_id=?", (cur_page,))
-        parent_info = cursor.fetchone()
-        cursor.execute("SELECT title FROM Pages WHERE id=?", (cur_page,))
-        breadcrumbs_title = cursor.fetchone()
-
-        if parent_info != None:
-            breadcrumbs.insert(0, breadcrumbs_title[0])
-            cur_page = parent_info[0]
-
-        else:
-            breadcrumbs.insert(0, breadcrumbs_title[0])
-            if breadcrumbs[0] == page_id:
-                breadcrumbs.clear()
-            break
+    breadcrumbs = get_breadcrumbs(cursor, page_id)
     
     return {
         "pageId": page_id,
