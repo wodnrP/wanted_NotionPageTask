@@ -36,11 +36,14 @@ CREATE TABLE PageHierarchy (
 import os
 import sqlite3
 
+# DB 및 SQLite cursor 생성
 def DataBase():
     conect_db = sqlite3.connect("test_db")
     cursor = conect_db.cursor()
     return cursor, conect_db
 
+
+# sub_page 생성 및 예외처리
 def get_subPage(cursor, page_id):
     try:
         cursor.execute("SELECT child_id FROM PageHierarchy WHERE parent_id=? LIMIT 4", (page_id,))
@@ -49,6 +52,10 @@ def get_subPage(cursor, page_id):
         print("SQL Query Error")
     return []
 
+
+# breadcrumbs 저장 및 예외처리
+# 자식 id 기준 부모 아이디 조회로 breadcrumbs 추출
+# 만약 부모 아이디가 없으면 breadcumbs None으로 초기화
 # insert(0,) -> deque() O(n) -> O(1) 개선
 def get_breadcrumbs(cursor, page_id):
     from collections import deque
@@ -77,22 +84,17 @@ def get_breadcrumbs(cursor, page_id):
         print("SQL Query Error")
     return []
 
+
+# notion page 정보 GET API
 def get_PageInfo_Api(pageID):
     cursor = DataBase()[0]
     cursor.execute("SELECT * FROM Pages WHERE id=?", (pageID,))
-
     page_info = cursor.fetchone()
     
     if page_info == None:
         return None 
-    
     page_id, title, content = page_info
-
-    # 최대 4개 조회
     sub_page = get_subPage(cursor, page_id)
-
-    # 자식 id 기준 부모 아이디 조회로 breadcrumbs 추출
-    # 만약 부모 아이디가 없으면 breadcumbs None으로 초기화
     breadcrumbs = get_breadcrumbs(cursor, page_id)
     
     return {
@@ -104,7 +106,7 @@ def get_PageInfo_Api(pageID):
     }
 
     
-# PagesTable, PageHiierarchyTable 생성
+# PagesTable, PageHiierarchyTable 생성 및 dummy 추가 쿼리
 create_pages = """
     CREATE TABLE Pages (
     id INTEGER PRIMARY KEY, 
@@ -135,6 +137,7 @@ update_hierarchy = """
     INSERT INTO PageHierarchy(parent_id, child_id) 
     VALUES (1, 2), (1, 3), (1, 4), (5, 1), (6, 5), (7, 6);
 """
+
 
 # 테스트 DB 생성 및 dummy data 추가 후 저장
 if not os.path.exists("test_db"):
