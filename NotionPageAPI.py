@@ -33,7 +33,7 @@ CREATE TABLE PageHierarchy (
 "breadcrumbs" : ["A", "B", "C",] // 혹은 "breadcrumbs" : "A / B / C"
 } 
 """
-
+import os
 import sqlite3
 
 def DataBase():
@@ -121,27 +121,15 @@ create_hierarchy = """
     FOREIGN KEY(child_id) REFERENCES Pages(id));
     """
 
-update_pages1 = """
-    INSERT INTO Pages(id, title, content) VALUES(1, 'A', '첫번째 페이지 내용');
-"""
-update_pages2 = """
-    INSERT INTO Pages(id, title, content) VALUES(2, 'B', '두번째 페이지 내용');
-"""
-update_pages3 = """
-    INSERT INTO Pages(id, title, content) VALUES(3, 'C', '세번째 페이지 내용');
-"""
-update_pages4 = """
-    INSERT INTO Pages(id, title, content) VALUES(4, 'D', '네번째 페이지 내용');
-"""
-update_pages5 = """
-    INSERT INTO Pages(id, title, content) VALUES(5, 'F', '다섯번째 페이지 내용');
-"""
-update_pages6 = """
-    INSERT INTO Pages(id, title, content) VALUES(6, 'G', '여섯번째 페이지 내용');
-"""
-update_pages7 = """
-    INSERT INTO Pages(id, title, content) VALUES(7, 'H', '일곱번째 페이지 내용');
-"""
+insert_pages = [
+    (1, 'A', '첫번째 페이지 내용'),
+    (2, 'B', '두번째 페이지 내용'),
+    (3, 'C', '세번째 페이지 내용'),
+    (4, 'D', '네번째 페이지 내용'),
+    (5, 'F', '다섯번째 페이지 내용'),
+    (6, 'G', '여섯번째 페이지 내용'),
+    (7, 'H', '일곱번째 페이지 내용')
+]
 
 update_hierarchy = """
     INSERT INTO PageHierarchy(parent_id, child_id) 
@@ -149,18 +137,14 @@ update_hierarchy = """
 """
 
 # 테스트 DB 생성 및 dummy data 추가 후 저장
-# test_db = DataBase()
-# test_db[0].execute(create_pages)
-# test_db[0].execute(create_hierarchy)
-# test_db[0].execute(update_pages1)
-# test_db[0].execute(update_pages2)
-# test_db[0].execute(update_pages3)
-# test_db[0].execute(update_pages4)
-# test_db[0].execute(update_pages5)
-# test_db[0].execute(update_pages6)
-# test_db[0].execute(update_pages7)
-# test_db[0].execute(update_hierarchy)
-# test_db[1].commit()
+if not os.path.exists("test_db"):
+    test_db = DataBase()
+    test_db[0].execute(create_pages)
+    test_db[0].execute(create_hierarchy)
+    for i in insert_pages:
+        test_db[0].execute("INSERT INTO Pages(id, title, content) VALUES(?,?,?)", i)
+    test_db[0].execute(update_hierarchy)
+    test_db[1].commit()
 
 #확인
 print(get_PageInfo_Api(1))
